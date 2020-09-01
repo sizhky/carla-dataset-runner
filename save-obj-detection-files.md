@@ -1,8 +1,8 @@
 ### Instructions to create your own carla data
 
 1. Install Carla (Need to elaborate instructions / refer to RL CARLA section for installation)
-2. Run Carla from terminal
-1. Open terminal and run each line
+2. Run Carla from terminal and let it run in background
+1. Open a new terminal and run each line
 ```sh
 git clone https://github.com/sizhky/carla-dataset-runner`
 cd carla-dataset-runner
