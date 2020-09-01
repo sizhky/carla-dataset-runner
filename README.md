@@ -1,3 +1,6 @@
+# Instructions to save Object Detection Images
+After installing Carla from below instructions, refer to [save-obj-detection-files.md](save-obj-detection-files.md) for more details
+
 # Carla (0.9.6) dataset collector :car: :floppy_disk:
 
 Script used for collecting data on CARLA version 0.9.6. This repository was created mainly by adapting the example python scripts from the carla repository.
