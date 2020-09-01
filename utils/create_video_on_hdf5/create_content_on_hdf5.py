@@ -2,7 +2,7 @@ import h5py
 import cv2
 import numpy as np
 import sys
-
+from torch_snippets import makedir, inspect
 
 def read_hdf5_test(hdf5_file):
     with h5py.File(hdf5_file, 'r') as file:
@@ -11,13 +11,43 @@ def read_hdf5_test(hdf5_file):
         bb_walkers = file['bounding_box']['walkers']
         depth = file['depth']
         timestamps = file['timestamps']
-
+        data = []
         for time in timestamps['timestamps']:
             rgb_data = np.array(rgb[str(time)])
-            bb_vehicles_data = np.array(bb_vehicles[str(time)])
-            bb_walkers_data = np.array(bb_walkers[str(time)])
+            bb_vehicles_data = np.array(bb_vehicles[str(time)]).reshape(-1,4)
+            bb_walkers_data = np.array(bb_walkers[str(time)]).reshape(-1,4)
             depth_data = np.array(depth[str(time)])
-            return rgb_data, bb_vehicles_data, bb_walkers_data, depth_data
+            data.append([rgb_data, bb_vehicles_data, bb_walkers_data, depth_data])
+        data = [i for i in zip(*data)]
+        data[0] = np.array(data[0])
+        data[-1] = np.array(data[-1])
+        return data
+
+def convert_to_yolo_format(hdf5_file, output_folder):
+    makedir(output_folder)
+    with h5py.File(hdf5_file, 'r') as file:
+        rgb = file['rgb']
+        bb_vehicles = file['bounding_box']['vehicles']
+        bb_walkers = file['bounding_box']['walkers']
+        depth = file['depth']
+        timestamps = file['timestamps']
+        data = []
+        for time in timestamps['timestamps']:
+            rgb_data = np.array(rgb[str(time)])
+            H,W,_ = rgb_data.shape
+            cv2.imwrite(f'{output_folder}/{time}.png', rgb_data)
+            vehicles = np.array(bb_vehicles[str(time)]).reshape(-1,4)/np.array([W,H,W,H])
+            vehicles = np.c_[np.array([0]*len(vehicles))[...,None], vehicles].tolist()
+            walkers = np.array(bb_walkers[str(time)]).reshape(-1,4)/np.array([W,H,W,H])
+            walkers = np.c_[np.array([1]*len(walkers))[...,None], walkers].tolist()
+            yolowrite(vehicles+walkers, f'{output_folder}/{time}.txt')
+
+def yolowrite(bbinfo, txt):
+    with open(txt, 'w') as f:
+        for line in bbinfo:
+            a,b,c,d,e = line
+            if b < 0: continue
+            f.write(f'{int(a)} {b} {c} {d} {e}\n')
 
 
 def treat_single_image(rgb_data, bb_vehicles_data, bb_walkers_data, depth_data, save_to_many_single_files=False):

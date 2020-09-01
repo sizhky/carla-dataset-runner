@@ -20,7 +20,8 @@ class CarlaWorld:
         # Carla initialization
         client = carla.Client('localhost', 2000)
         client.set_timeout(20.0)
-        #self.world = client.load_world('Town01')
+        self.world = client.load_world('Town02')
+        self.world = client.reload_world()
         self.world = client.get_world()
         print('Successfully connected to CARLA')
         self.blueprint_library = self.world.get_blueprint_library()
@@ -49,6 +50,7 @@ class CarlaWorld:
 
     def spawn_npcs(self, number_of_vehicles, number_of_walkers):
         self.NPC = NPCClass()
+        self.NPC.remove_npcs()
         self.vehicles_list, _ = self.NPC.create_npcs(number_of_vehicles, number_of_walkers)
 
     def put_rgb_sensor(self, vehicle, sensor_width=640, sensor_height=480, fov=110):

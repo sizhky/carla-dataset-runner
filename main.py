@@ -29,13 +29,13 @@ Town04 - 250 vehic 100 walk
 Town05 - 150 vehic 150 walk
 """
 
+from torch_snippets import *
 import argparse
 import os
 import sys
 from CarlaWorld import CarlaWorld
 from HDF5Saver import HDF5Saver
 from utils.create_video_on_hdf5.create_content_on_hdf5 import read_hdf5_test, treat_single_image, create_video_sample
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Settings for the data capture", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -64,18 +64,24 @@ if __name__ == "__main__":
     CarlaWorld = CarlaWorld(HDF5_file=HDF5_file)
 
     timestamps = []
-    egos_to_run = 13
+    egos_to_run = 20
+    frames_per_ego = 1
+    timer = Timer(egos_to_run * (len(CarlaWorld.weather_options)-1) * frames_per_ego)
+    ctr = 0
     print('Starting to record data...')
     CarlaWorld.spawn_npcs(number_of_vehicles=args.vehicles, number_of_walkers=args.walkers)
     for weather_option in CarlaWorld.weather_options:
+        if weather_option == [30.0, 30.0, 0.0, 30.0, 0.0, -60.0]: continue
         CarlaWorld.set_weather(weather_option)
         ego_vehicle_iteration = 0
         while ego_vehicle_iteration < egos_to_run:
             CarlaWorld.begin_data_acquisition(sensor_width, sensor_height, fov,
-                                             frames_to_record_one_ego=2, timestamps=timestamps,
+                                             frames_to_record_one_ego=frames_per_ego, timestamps=timestamps,
                                              egos_to_run=egos_to_run)
             print('Setting another vehicle as EGO.')
             ego_vehicle_iteration += 1
+            timer(ctr)
+            ctr += 1
 
     CarlaWorld.remove_npcs()
     print('Finished simulation.')
